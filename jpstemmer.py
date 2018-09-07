@@ -1,3 +1,4 @@
+
 # The regular expressions module is used once to check if the word using latin characters.
 import re
 
@@ -58,8 +59,6 @@ class JPStemmer:
                 self.step8()
             else:
                 self.step2a()
-
-        print(self.wordg, self.ending)
         return self.word
 
     def is_latin(self, string):
@@ -343,9 +342,7 @@ class JPStemmer:
             elif self.wordg[0] == "two":
                 self.word += u"る"
 
-def stem():
-    word = input("Enter word: ")
+def stemming(w):
     stem = JPStemmer()
-    print("Stemmed word:", stem.stemmer(word, len(word)))
+    return stem.stemmer(w, len(w))
     
-
