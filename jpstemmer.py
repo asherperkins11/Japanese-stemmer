@@ -1,8 +1,4 @@
 
-# The regular expressions module is used once to check if the word using latin characters.
-import re
-
-
 class JPStemmer:
     def __init__(self):
         # These are the lists that will be searched for to take away both the ending characters of a word, and to aproprialty
@@ -15,14 +11,7 @@ class JPStemmer:
         self.ulist = [u"う", u"く", u"ぐ", u"す", u"ず", u"つ", u"づ", u"ぬ", u"む", u"ふ", u"ぶ", u"ぷ", u"る", u"ゆ"]
         self.elist = [u"え", u"け", u"げ", u"せ", u"ぜ", u"て", u"で", u"ね", u"め", u"へ", u"べ", u"ぺ", u"れ"]
         self.olist = [u"お", u"こ", u"ご", u"そ", u"ぞ", u"と", u"ど", u"の", u"も", u"ほ", u"ぼ", u"ぽ", u"ろ", u"よ"]
-        self.tte = [u"って", u"った", u"んで", u"んだ", u"いて", u"いた", u"き", u"いで", u"いだ", u"ぎ"]
-        # This is used to weed out any latin words or symbols, so the program doesn't
-        # attempt to stem anything that isn't Japanese.
-        self.latin_regexp = re.compile(r'^[\]\-'
-                                       + r' !"#$%&()*+,./:;<=>?@\\^_`{}|~‘’“”'
-                                       + "'"
-                                       + 'a-zA-Z0-9'
-                                       + ']+$')
+        self.tte = [u"って", u"った", u"んで", u"んだ", u"いて", u"いた", u"きて", u"いで", u"いだ", u"ぎで"]
         
         # This is the variable for the word that will be stemmed.
         self.word = ""
@@ -45,6 +34,7 @@ class JPStemmer:
         self.original = self.word
         self.b = b
         self.word.strip(".")
+        self.gothrough = True
         # if not self.is_latin(self.word):
         self.step1()
         if self.wordg != ['']:
@@ -60,9 +50,6 @@ class JPStemmer:
             else:
                 self.step2a()
         return self.word
-
-    def is_latin(self, string):
-        return self.latin_regexp.match(string) is not None
 
     # Checks what kind of verb the word is. If the word is not a verb, nothing happens
     def checkvb(self):
@@ -124,7 +111,15 @@ class JPStemmer:
                     else:
                         self.wordg = ["one", "normal"]
                         self.ending = i
-
+                        
+                elif i == 'ませんでした':
+                    self.ending = i
+                    if self.word[-len(i) - 1] in self.ilist:
+                        self.wordg = ["one", "normal"]
+                        self.ending = i
+                    else:
+                        self.wordg = ['two', "normal"]
+                        self.ending = i
                 elif self.word[self.b - len(i) - 1] in self.wordlist:
                     self.wordg = ["one", "normal"]
                     self.ending = i
@@ -277,11 +272,9 @@ class JPStemmer:
             # This conjugates in the case of a group two verb, which just need to have "る" added to the end.
             if self.wordg[0] == "two":
                 self.word += u"る"
-
         if self.wordg[0] == "shimasu":
             self.word += u"る"
-
-
+        
     def step2a(self):
         # This conjugates adjectives, if wordg == "i", "adjective" it simply adds "い" to the end.
         if self.wordg[1] == "adjective":
@@ -292,16 +285,18 @@ class JPStemmer:
     def step3(self):
         if self.wordg[1] == "tte":
             if self.wordg[0] == "one":
-                pass
+                self.word = self.original
+                print('yes')
             elif self.wordg[0] == "two":
                 self.word += u"る"
-
+        
     # Conjugates potential form
     def step4(self):
         if self.wordg[1] == "pot":
             if self.wordg[0] == "one":
-                pass
-
+                    pass
+                #self.word = self.word[:-1] + self.ulist[self.wordlist.index(self.word[-1])] += u"る"
+        
     # Conjugates imperative form
     def step5(self):
         # This only works for group two imperative verbs because it isn't possible to recognise group one verbs without
@@ -320,7 +315,7 @@ class JPStemmer:
             # If the word is group two, it adds "る" to the end.
             elif self.wordg[0] == "two":
                 self.word += u"る"
-
+        
     # Conjugates passive form
     def step7(self):
         # If wordg == "one" and "pass", it gets the last character's index in it's appropriate list and replaces it with
@@ -330,7 +325,7 @@ class JPStemmer:
                 self.word = self.word[:-1] + self.ulist[self.wordlist.index(self.word[-1])]
         # Not how step7 doesn't process group 2 verbs, that is because it is also impossible to tell group two passive
         # verbs from other kinds of verbs.
-
+        
     # Conjugates causative
     def step8(self):
         # This functions the same as most of the other steps, using the index of a character in a list to change it with
@@ -341,8 +336,7 @@ class JPStemmer:
             # "る" is added to the end here as well.
             elif self.wordg[0] == "two":
                 self.word += u"る"
-
+        
 def stemming(w):
     stem = JPStemmer()
     return stem.stemmer(w, len(w))
-    
