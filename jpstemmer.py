@@ -337,6 +337,6 @@ class JPStemmer:
             elif self.wordg[0] == "two":
                 self.word += u"る"
         
-def stemming(w):
+def stemming(word):
     stem = JPStemmer()
-    return stem.stemmer(w, len(w))
+    return stem.stemmer(w, len(word))
