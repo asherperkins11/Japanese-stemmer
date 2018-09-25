@@ -1,10 +1,10 @@
-
+import re
 class JPStemmer:
     def __init__(self):
         # These are the lists that will be searched for to take away both the ending characters of a word, and to aproprialty
         # conjugate a verb.
         self.endinglist = [u"ませんでした", u"ました", u"ません", u"ます", u"ない", u"なかった"]
-        self.nadjend = [u"です", u"だ", u"でした", u"だった", u"ではありません", u"ではない", u"ではありませんでした", u"ではなかった"]
+        self.nadjend = [u"です", u"だ", u"でした", u"だった", u"ではありません", u"ではない", u"ではありませんでした", u"ではなかった", u"じゃない"]
         self.iadjend = [u"くなかった", u"かった", u"くない"]
         self.wordlist = [u"わ", u"か", u"が", u"さ", u"ざ", u"た", u"だ", u"な", u"ま", u"は", u"ば", u"ぱ", u"ら", u"や"]
         self.ilist = [u"い", u"き", u"ぎ", u"し", u"じ", u"ち", u"ぢ", u"に", u"み", u"ひ", u"び", u"ぴ", u"り"]
@@ -73,7 +73,7 @@ class JPStemmer:
             # It goes through these checks to make sure an adjective is not mistaken for a verb in past plain form.
             # This is checked by looking at the character before "なかった", if it is in self.wordlist it is a verb. This
             # is faciliated by the use of .endswith(), which is used throughout this code to check the end of the word.
-            if self.word[-1] == u"い":
+            if self.word[-1] == u"い" and not self.word.endswith(u"じゃない"):
                 if self.word[-2] != u"な":
                     self.wordg = ["i", "adjective"]
                     self.ending = u"い"
@@ -98,6 +98,10 @@ class JPStemmer:
                 self.wordg = ["i", "adjective"]
                 self.ending = u"じゃな" + i
                 return True
+        for i in self.nadjend:
+            if self.word.endswith(i):
+                self.wordg = ["na", "adjective"]
+                self.ending = i
 
     def checkEnd(self):
         # This function checks the verb for any of the "normal" sentence endings. If the character it's looking for is
@@ -152,8 +156,9 @@ class JPStemmer:
                 self.wordg = ["two", "pot"]
                 self.ending = u"られる"
             else:
-                self.wordg = ["one", "normal"]
-                self.ending = ""
+                if self.wordg == []:
+                    self.wordg = ["one", "normal"]
+                    self.ending = ""
 
     # This is the second function to check for plain verbs, and spesifically group 2 verbs.
     def checkPlain2(self):
@@ -244,11 +249,14 @@ class JPStemmer:
     # it will set the word type variable to "adj". If it does not detect an adjective, it wordType to "vb" and assumes
     # the word is a verb. It will then do the checks in checkverb()
     def step1(self):
-        if self.checkadj() == True:
-            self.wordType = "adj"
+        if re.search(u'[\u3040-\u309F]', self.word):
+            if self.checkadj() == True:
+                self.wordType = "adj"
+            else:
+                self.wordType = "vb"
+                self.checkvb()
         else:
-            self.wordType = "vb"
-            self.checkvb()
+            self.wordg = ['']
 
     # Conjugates the polite, negative, past and past negative forms
     def step2(self):
@@ -280,13 +288,14 @@ class JPStemmer:
         if self.wordg[1] == "adjective":
             if self.wordg[0] == "i":
                 self.word += u"い"
+            if self.wordg[0] == "na":
+                self.word -= len(self.ending)
 
     # Conjugates te form / ta form
     def step3(self):
         if self.wordg[1] == "tte":
             if self.wordg[0] == "one":
                 self.word = self.original
-                print('yes')
             elif self.wordg[0] == "two":
                 self.word += u"る"
         
@@ -337,6 +346,6 @@ class JPStemmer:
             elif self.wordg[0] == "two":
                 self.word += u"る"
         
-def stemming(word):
+def stemming(w):
     stem = JPStemmer()
-    return stem.stemmer(w, len(word))
+    return stem.stemmer(w, len(w))
