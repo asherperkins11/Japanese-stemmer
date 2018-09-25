@@ -1,8 +1,9 @@
 import re
 class JPStemmer:
     def __init__(self):
-        # These are the lists that will be searched for to take away both the ending characters of a word, and to aproprialty
-        # conjugate a verb.
+        # These are the various lists that will be searched through to conjugate verbs and adjectives. These lists are set out in an intentional way;
+        # While conjugating, the index of a character is found in the appropriate list. Then, that character is replaced by a character
+        # in a separate list with the same index.
         self.endinglist = [u"ませんでした", u"ました", u"ません", u"ます", u"ない", u"なかった"]
         self.nadjend = [u"です", u"だ", u"でした", u"だった", u"ではありません", u"ではない", u"ではありませんでした", u"ではなかった", u"じゃない"]
         self.iadjend = [u"くなかった", u"かった", u"くない"]
@@ -13,29 +14,24 @@ class JPStemmer:
         self.olist = [u"お", u"こ", u"ご", u"そ", u"ぞ", u"と", u"ど", u"の", u"も", u"ほ", u"ぼ", u"ぽ", u"ろ", u"よ"]
         self.tte = [u"って", u"った", u"んで", u"んだ", u"いて", u"いた", u"きて", u"いで", u"いだ", u"ぎで"]
         
-        # This is the variable for the word that will be stemmed.
+        # This is the variable containing the word to be stemmed.
         self.word = ""
-        # b is set to the length of the word
-        self.b = 0
-        # wordg is the main variable this algorithm uses to define the word it's processing.
+        # wordg is the main variable the algorithm uses to define the word it's processing.
         self.wordg = [""]
-        self.wordend = ""
-        # This variable is used to store the end characters of a word that need to be removed before the conjugation.
+        # ending is used to store the end characters of a word that need to be removed before conjugation.
         self.ending = ""
-        # Used to store the type of word (verb or adjective ). This is used in step1 to make sure verbs don't get conjugated
-        # like adjectives and vice-versa.
+        # wordType is used to either show that the word is a verb or and adjective. This is used in step1 to make sure
+        # verbs don't get conjugated like adjectives and vice-versa.
         self.wordType = ""
         # original is a variable to store the unmodified word for future use.
         self.original = ""
 
-    def stemmer(self, a, b):
-        """a == the word, b == the word length"""
+    def stemmer(self, a):
+        """a == the word"""
         self.word = a
         self.original = self.word
-        self.b = b
         self.word.strip(".")
         self.gothrough = True
-        # if not self.is_latin(self.word):
         self.step1()
         if self.wordg != ['']:
             self.word = self.word[:len(self.word) - len(self.ending)]
@@ -108,7 +104,7 @@ class JPStemmer:
         # in one of the letter lists, it assignes wordg apropreatly.
         for i in self.endinglist:
             if self.word.endswith(i):
-                if self.word[self.b - len(i) - 1] in self.ilist:
+                if self.word[len(self.original) - len(i) - 1] in self.ilist:
                     if self.word.endswith(u"します"):
                         self.wordg = ["shimasu", "normal"]
                         self.ending = "ます"
@@ -124,11 +120,11 @@ class JPStemmer:
                     else:
                         self.wordg = ['two', "normal"]
                         self.ending = i
-                elif self.word[self.b - len(i) - 1] in self.wordlist:
+                elif self.word[len(self.original) - len(i) - 1] in self.wordlist:
                     self.wordg = ["one", "normal"]
                     self.ending = i
 
-                elif self.word[self.b - len(i) - 1] in self.elist:
+                elif self.word[len(self.original) - len(i) - 1] in self.elist:
                     self.wordg = ["two", "normal"]
                     self.ending = i
             
@@ -147,7 +143,7 @@ class JPStemmer:
     def checkPlain1(self):
         # Checks for group 1 plain verbs
         if self.ending not in self.endinglist:
-            if self.word[self.b - 1] in self.ulist:
+            if self.word[len(self.original) - 1] in self.ulist:
                 for i in self.wordlist:
                     if self.word.endswith(i + u"れる"):
                         self.wordg = ["one", "pot"]
@@ -163,14 +159,14 @@ class JPStemmer:
     # This is the second function to check for plain verbs, and spesifically group 2 verbs.
     def checkPlain2(self):
         # Verbs with two characters inclusive of る are always group 2.
-        if self.b == 2 and self.word[1] == u"る":
+        if len(self.original) == 2 and self.word[1] == u"る":
             self.wordg = ["two", "normal"]
             self.ending = u"る"
         # Checks for group 2 plain verbs
-        elif self.word[self.b - 1] == u"る" and self.word[self.b - 2] in self.elist and self.word[self.b - 3] not in self.wordlist:
+        elif self.word[len(self.original) - 1] == u"る" and self.word[len(self.original) - 2] in self.elist and self.word[len(self.original) - 3] not in self.wordlist:
             self.wordg = ["two", "normal"]
             self.ending = u"る"
-            self.ending = self.word[self.b - 1]
+            self.ending = self.word[len(self.original) - 1]
 
     # Checks for causeative form
     def checkCause(self):
@@ -269,13 +265,13 @@ class JPStemmer:
                 # charater of the same index in the list it needs to conjugate to. This method is used repeatedly
                 # throughout the algoruthm.
 
-                if self.word[self.b - (len(self.ending) + 1)] in self.wordlist:
+                if self.word[len(self.original) - (len(self.ending) + 1)] in self.wordlist:
                     # In the case of a negative verb (which always end with an "a" character before the suffix), this
                     # removes the "a" character and replaces it with an "u" character in order to conjugate it to plain form.
                     self.word = self.word[:-1] + self.ulist[self.wordlist.index(self.word[-1])]
                 # Conjugates polite forms.
                 # This does the same as the previous if statement, but for "i" characters.
-                elif self.word[self.b - (len(self.ending) + 1)] in self.ilist:
+                elif self.word[len(self.original) - (len(self.ending) + 1)] in self.ilist:
                     self.word = self.word[:-1] + self.ulist[self.ilist.index(self.word[-1])]
             # This conjugates in the case of a group two verb, which just need to have "る" added to the end.
             if self.wordg[0] == "two":
@@ -348,4 +344,4 @@ class JPStemmer:
         
 def stemming(w):
     stem = JPStemmer()
-    return stem.stemmer(w, len(w))
+    return stem.stemmer(w)
