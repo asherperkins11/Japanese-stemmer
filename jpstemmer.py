@@ -20,7 +20,7 @@ class JPStemmer:
         self.wordg = [""]
         # ending is used to store the end characters of a word that need to be removed before conjugation.
         self.ending = ""
-        # wordType is used to either show that the word is a verb or and adjective. This is used in step1 to make sure
+        # wordType is used to either show that the word is a verb or an adjective. This is used in step1 to make sure
         # verbs don't get conjugated like adjectives and vice-versa.
         self.wordType = ""
         # original is a variable to store the unmodified word for future use.
