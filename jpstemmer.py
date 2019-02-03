@@ -1,7 +1,7 @@
 import re
 class JPStemmer:
     def __init__(self):
-        # These are the various lists that will be searched through to conjugate verbs and adjectives. These lists are set out in an intentional way;
+        # These are the various lists that will be searched through to conjugate verbs and adjectives.
         # While conjugating, the index of a character is found in the appropriate list. Then, that character is replaced by a character
         # in a separate list with the same index.
         self.endinglist = [u"ませんでした", u"ました", u"ません", u"ます", u"ない", u"なかった"]
